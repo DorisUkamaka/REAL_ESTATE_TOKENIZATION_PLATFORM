@@ -118,3 +118,75 @@
     )
   )
 )
+
+
+;; Add a new property
+(define-public (add-property (price uint) (location (string-ascii 50)) (property-type (string-ascii 20)) (area uint) (description (string-ascii 200)))
+  (let ((property-id (var-get total-properties)))
+    (asserts! (not (var-get contract-paused)) err-unauthorized)
+    (asserts! (> price u0) err-invalid-price)
+    (if (is-contract-owner)
+      (begin
+        (map-set properties property-id {
+          owner: contract-owner,
+          price: price,
+          location: location,
+          tokenized: false,
+          property-type: property-type,
+          area: area,
+          for-sale: false,
+          creation-block: block-height,
+          description: description
+        })
+        (var-set total-properties (+ property-id u1))
+        (add-to-user-properties contract-owner property-id)
+        (ok property-id)
+      )
+      err-owner-only
+    )
+  )
+)
+
+;; Update property details
+(define-public (update-property (property-id uint) (price uint) (for-sale bool) (description (string-ascii 200)))
+  (let ((property (unwrap! (map-get? properties property-id) err-not-found)))
+    (asserts! (not (var-get contract-paused)) err-unauthorized)
+    (asserts! (is-eq tx-sender (get owner property)) err-unauthorized)
+    (asserts! (> price u0) err-invalid-price)
+    (map-set properties property-id 
+      (merge property { 
+        price: price, 
+        for-sale: for-sale,
+        description: description
+      })
+    )
+    (ok true)
+  )
+)
+
+;; Tokenize a property
+(define-public (tokenize-property (property-id uint) (total-tokens uint) (token-price uint))
+  (let ((property (unwrap! (map-get? properties property-id) err-not-found)))
+    (asserts! (not (var-get contract-paused)) err-unauthorized)
+    (asserts! (is-eq (get owner property) tx-sender) err-unauthorized)
+    (asserts! (not (get tokenized property)) err-already-tokenized)
+    (asserts! (> total-tokens u0) err-invalid-token-amount)
+    (asserts! (> token-price u0) err-invalid-price)
+    
+    (map-set properties property-id (merge property { tokenized: true }))
+    (map-set property-tokens property-id {
+      total-supply: total-tokens,
+      tokens-remaining: total-tokens,
+      token-price: token-price,
+      creator: tx-sender
+    })
+    
+    ;; Set initial token ownership
+    (map-set token-ownership 
+      { property-id: property-id, owner: tx-sender }
+      { token-count: u0 }
+    )
+    
+    (ok true)
+  )
+)
