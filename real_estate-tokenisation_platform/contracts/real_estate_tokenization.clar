@@ -36,3 +36,40 @@
     description: (string-ascii 200)
   }
 )
+
+
+(define-map property-tokens
+  uint
+  {
+    total-supply: uint,
+    tokens-remaining: uint,
+    token-price: uint, ;; Price per token
+    creator: principal
+  }
+)
+
+(define-map token-ownership
+  { property-id: uint, owner: principal }
+  { token-count: uint }
+)
+
+(define-map property-transactions
+  uint ;; transaction-id
+  {
+    property-id: uint,
+    seller: principal,
+    buyer: principal,
+    amount: uint,
+    tokens: uint,
+    block-height: uint,
+    transaction-type: (string-ascii 20) ;; "MINT", "TRANSFER", "LISTING"
+  }
+)
+
+(define-map user-properties
+  principal
+  { owned-properties: (list 100 uint) }
+)
+
+;; Define non-fungible token
+(define-non-fungible-token property-token uint)
