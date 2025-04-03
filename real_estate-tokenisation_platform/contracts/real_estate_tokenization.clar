@@ -417,3 +417,25 @@
     (ok true)
   )
 )
+
+;; Contract administration functions
+
+;; Pause/Unpause the contract
+(define-public (set-contract-pause (paused bool))
+  (begin
+    (asserts! (is-contract-owner) err-owner-only)
+    (var-set contract-paused paused)
+    (ok true)
+  )
+)
+
+;; Withdraw platform fees
+(define-public (withdraw-platform-fees (amount uint))
+  (begin
+    (asserts! (is-contract-owner) err-owner-only)
+    (asserts! (<= amount (var-get platform-revenue)) err-insufficient-tokens)
+    (try! (as-contract (stx-transfer? amount contract-owner tx-sender)))
+    (var-set platform-revenue (- (var-get platform-revenue) amount))
+    (ok true)
+  )
+)
