@@ -1,7 +1,7 @@
 import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarinet@v0.14.0/index.ts';
 import { assertEquals } from 'https://deno.land/std@0.90.0/testing/asserts.ts';
 
-const CONTRACT_NAME = 'real-estate-tokenization';
+const CONTRACT_NAME = 'real_estate_tokenization';
 
 Clarinet.test({
     name: "Ensure that contract owner can add new properties",
